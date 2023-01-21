@@ -302,7 +302,7 @@ export default {
 
       that.sendMessage('CAP REQ : twitch.tv/tags twitch.tv/commands ')
       that.sendMessage(`PASS oauth:${accessToken}`);
-      that.sendMessage('NICK tayne_bot');
+      that.sendMessage(`NICK ${import.meta.env.VITE_TWITCH_NICK}`);
     }
 
     this.connection.onmessage = function(event) {
@@ -322,7 +322,7 @@ export default {
               break;
             case '001':
               console.log('Login successful, joining channel.')
-              that.sendMessage('JOIN #tayne_bot');
+              that.sendMessage(`JOIN #${import.meta.env.VITE_TWITCH_CHANNEL}`);
               break;
             case 'PART':
               console.error('The channel must have banned the bot.');
