@@ -1,6 +1,6 @@
 <template>
   <main>
-    hey mayn
+    <ChatWidget :messages="messagesToDisplay"></ChatWidget>
   </main>
 </template>
 
@@ -13,8 +13,16 @@
 // }
 // console.log(commands)
 
+import ChatWidget from '../components/ChatWidget.vue'
+
 export default {
   name: 'Home',
+  components: { ChatWidget },
+  data() {
+    return {
+      messagesToDisplay: []
+    }
+  },
   methods: {
     sendMessage: function(msg) {
       this.connection.send(msg);
@@ -169,7 +177,7 @@ export default {
         case '372':
         case '375':
         case '376':
-          console.log(`numeric message: ${commandParts[0]}`)
+          // console.log(`numeric message: ${commandParts[0]}`)
           return null;
         default:
           console.log(`\nUnexpected command: ${commandParts[0]}\n`);
@@ -289,38 +297,88 @@ export default {
   created: function() {
     const that = this;
 
+    // if no access_token cookie is present, redirect to login
     if (!this.$cookies.get('access_token')) {
       this.$router.push('/login')
     }
 
+    // save access_token cookie
     const accessToken = this.$cookies.get('access_token')
-    this.connection = new WebSocket('ws://irc-ws.chat.twitch.tv:80')
 
+    // create WS connection as prop of this component
+    this.connection = new WebSocket('ws://irc-ws.chat.twitch.tv:80')
     this.connection.onopen = function(event) {
-      console.log(event)
       console.log("Successfully connected to the echo websocket server...")
 
+      // request chat capabilities, provide password (oauth access token) and nickname for user logging into channel
       that.sendMessage('CAP REQ : twitch.tv/tags twitch.tv/commands ')
       that.sendMessage(`PASS oauth:${accessToken}`);
       that.sendMessage(`NICK ${import.meta.env.VITE_TWITCH_NICK}`);
     }
-
     this.connection.onmessage = function(event) {
-      // console.log(event)
+      // might be multiple twitch messages in one WS message, so separate them out and loop through
       let messages = event.data.trimEnd().split('\r\n');
-      // console.log(messages)
       messages.forEach(message => {
+        // parse the IRC message via the parseMessage method
         let parsedMessage = that.parseMessage(message);
-
         if(parsedMessage) {
+          // switch the different kinds of twitch IRC messages
           switch (parsedMessage.command.command) {
-            case 'PRIVMSG':
-              console.log(parsedMessage);
+            case 'PRIVMSG': // message sent in channel
+              // parse badges
+              if (parsedMessage.tags.badges) {
+                parsedMessage.tags.badgesList = []
+                for (let key in parsedMessage.tags.badges) {
+                  let keyName = '';
+                  // some keys need to be reworded to fit icon names and class names
+                  // tried just leaving the ones that didn't need changed blank, and just rewriting 'key' for artist-badge
+                  // but didn't work
+                  switch (key) {
+                    case 'moderator':
+                      keyName = 'moderator';
+                      break;
+                    case 'broadcaster':
+                      keyName = 'broadcaster';
+                      break;
+                    case 'turbo':
+                      keyName = 'turbo';
+                      break;
+                    case 'verified':
+                      keyName = 'verified';
+                      break;
+                    case 'vip':
+                      keyName = 'vip';
+                      break;
+                    case 'no_audio':
+                      keyName = 'no_audio';
+                      break;
+                    case 'no_video':
+                      keyName = 'no_video';
+                      break;
+                    case 'premium':
+                      keyName = 'prime';
+                      break;
+                    case 'artist-badge':
+                      keyName = 'artist'
+                      break;
+                    default:
+                      break;
+                  }
+                  parsedMessage.tags.badgesList.push(keyName)
+                }
+              }
+              // if ChatWidget already has 15 messages, get rid of the first one
+              if (that.messagesToDisplay.length == 15) {
+                that.messagesToDisplay.shift();
+              }
+              // send message to ChatWidget
+              that.messagesToDisplay.push(parsedMessage);
+              // console.log(parsedMessage);
               break;
-            case 'PING':
+            case 'PING': // send PONG response to PING to verify active connection
               that.sendMessage('PONG ' + parsedMessage.parameters);
               break;
-            case '001':
+            case '001': // IRC code for successful login
               console.log('Login successful, joining channel.')
               that.sendMessage(`JOIN #${import.meta.env.VITE_TWITCH_CHANNEL}`);
               break;
