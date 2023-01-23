@@ -1,6 +1,6 @@
 <template>
   <main>
-    <ChatWidget :messages="messagesToDisplay"></ChatWidget>
+    <ChatWidget ref="childRef"></ChatWidget>
   </main>
 </template>
 
@@ -292,7 +292,7 @@ export default {
       }
 
       return parsedMessage;
-    }
+    },
   },
   created: function() {
     const that = this;
@@ -319,64 +319,16 @@ export default {
       // might be multiple twitch messages in one WS message, so separate them out and loop through
       let messages = event.data.trimEnd().split('\r\n');
       messages.forEach(message => {
-        // parse the IRC message via the parseMessage method
         let parsedMessage = that.parseMessage(message);
         if(parsedMessage) {
           // switch the different kinds of twitch IRC messages
           switch (parsedMessage.command.command) {
             case 'PRIVMSG': // message sent in channel
-              // parse badges
-              if (parsedMessage.tags.badges) {
-                parsedMessage.tags.badgesList = []
-                for (let key in parsedMessage.tags.badges) {
-                  let keyName = '';
-                  // some keys need to be reworded to fit icon names and class names
-                  // tried just leaving the ones that didn't need changed blank, and just rewriting 'key' for artist-badge
-                  // but didn't work
-                  switch (key) {
-                    case 'moderator':
-                      keyName = 'moderator';
-                      break;
-                    case 'broadcaster':
-                      keyName = 'broadcaster';
-                      break;
-                    case 'turbo':
-                      keyName = 'turbo';
-                      break;
-                    case 'verified':
-                      keyName = 'verified';
-                      break;
-                    case 'vip':
-                      keyName = 'vip';
-                      break;
-                    case 'no_audio':
-                      keyName = 'no_audio';
-                      break;
-                    case 'no_video':
-                      keyName = 'no_video';
-                      break;
-                    case 'premium':
-                      keyName = 'prime';
-                      break;
-                    case 'artist-badge':
-                      keyName = 'artist'
-                      break;
-                    default:
-                      break;
-                  }
-                  parsedMessage.tags.badgesList.push(keyName)
-                }
-              }
-              // if ChatWidget already has 15 messages, get rid of the first one
-              if (that.messagesToDisplay.length == 15) {
-                that.messagesToDisplay.shift();
-              }
-              // send message to ChatWidget
-              that.messagesToDisplay.push(parsedMessage);
-              // console.log(parsedMessage);
+              // send message to child ChatWidget
+              that.$refs.childRef.newMessage(parsedMessage);
               break;
             case 'PING': // send PONG response to PING to verify active connection
-              that.sendMessage('PONG ' + parsedMessage.parameters);
+              that.sendMessage('PONG ' + message.parameters);
               break;
             case '001': // IRC code for successful login
               console.log('Login successful, joining channel.')
