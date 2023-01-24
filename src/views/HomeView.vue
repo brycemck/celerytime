@@ -1,6 +1,6 @@
 <template>
   <main>
-    <ChatWidget ref="childRef"></ChatWidget>
+    <ChatWidget ref="ChatWidgetRef"></ChatWidget>
   </main>
 </template>
 
@@ -325,7 +325,8 @@ export default {
           switch (parsedMessage.command.command) {
             case 'PRIVMSG': // message sent in channel
               // send message to child ChatWidget
-              that.$refs.childRef.newMessage(parsedMessage);
+              console.log(parsedMessage)
+              that.$refs.ChatWidgetRef.newMessage(parsedMessage);
               break;
             case 'PING': // send PONG response to PING to verify active connection
               that.sendMessage('PONG ' + message.parameters);

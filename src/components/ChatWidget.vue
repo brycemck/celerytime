@@ -11,8 +11,8 @@
       <span v-if="message.tags.badgesList" class="badges">
         <span v-for="badge in message.tags.badgesList" :key="badge" class="badge" :class="badge+'-badge'"></span>
       </span>
-      <span class="chatter-name" :style="'color: '+ message.tags.color +';'">{{ message.source.nick }}</span>
-      {{ message.parameters }}
+      <span class="chatter-name" :style="'color: '+ message.tags.color +';'">{{ message.tags['display-name'] }}</span>
+      <span class="chat-content" v-html="message.parameters"></span>
     </p>
   </aside>
 </template>
@@ -61,8 +61,8 @@ import { ref } from 'vue';
 export default {
   name: 'ChatWidget',
   setup(context,props) {
-    const childRef = ref(null)
-    return {childRef} 
+    const ChatWidgetRef = ref(null)
+    return {ChatWidgetRef} 
   },
   data() {
     return {
@@ -78,8 +78,6 @@ export default {
         for (let key in message.tags.badges) {
           let keyName = '';
           // some keys need to be reworded to fit icon names and class names
-          // tried just leaving the ones that didn't need changed blank, and just rewriting 'key' for artist-badge
-          // but didn't work
           switch (key) {
             case 'moderator':
               keyName = 'moderator';
@@ -114,8 +112,27 @@ export default {
           message.tags.badgesList.push(keyName)
         }
       }
+      if (message.tags.emotes) {
+        console.log(message.tags.emotes)
+        let thisMessage = message.parameters;
+        for (const emote in message.tags.emotes) {
+          message.tags.emotes[emote].forEach(thisEmote => {
+            console.log(thisEmote)
+            // console.log(`BEFORE: ${thisMessage}`)
+            let toReplace = thisMessage.substring(thisEmote.startPosition, thisEmote.endPosition+1);
+            let emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0`;
+            console.log(`replace: '${toReplace}' (${thisEmote.startPosition}, ${thisEmote.endPosition+1}) with ${emoteUrl}`)
+            // console.log(`but this works? ${message.parameters.substring(0, 3)}`)
+            thisMessage = message.parameters.replace(toReplace, emoteUrl);
+            // console.log(`AFTER: ${thisMessage}`)
+          })
+          // message.parameters = thisMessage;
+          // console.log(`END LOOP: ${message.parameters}`)
+        }
+      }
       if (this.messagesToDisplay.length == this.messageLimit) this.messagesToDisplay.shift();
       this.messagesToDisplay.push(message);
+      // console.log(message);
     }
   },
   destroyed: function() {
