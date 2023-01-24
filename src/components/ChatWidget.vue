@@ -27,7 +27,7 @@ aside {
   overflow-x: hidden;
 }
 p {
-  margin: 0;
+  margin: 3px 0;
 }
 .badges {
   display: inline-block;
@@ -49,9 +49,13 @@ p {
 .chatter-name {
   position: relative;
   font-weight: 900;
-  padding-right: 5px;
+  padding-right: 7px;
   font-size: 17px;
   top: 1px;
+}
+.chat-content {
+  position: relative;
+  top: -1px;
 }
 </style>
 
@@ -112,45 +116,30 @@ export default {
           message.tags.badgesList.push(keyName)
         }
       }
+      // parse global emotes
       if (message.tags.emotes) {
         console.log(message.tags.emotes)
+
         // save original message
-        let originalMessage = message.parameters;
-        // reset message string in message object so we can add on what we need
-        message.parameters = '';
-        let thisMessage = '';
-        let messageOffset = 0;
+        const originalMessage = message.parameters;
+        let newMessage = originalMessage;
 
-        for (const emote in message.tags.emotes) {
-          thisMessage = ''
-          message.tags.emotes[emote].forEach(thisEmote => { // for each instance of one emote
-            // convert to ints so we can + 1 later
-            thisEmote.startPosition = parseInt(thisEmote.startPosition);
-            thisEmote.endPosition = parseInt(thisEmote.endPosition) + 1;
-
-            const emoteText = originalMessage.substring(thisEmote.startPosition, thisEmote.endPosition);
-            const emoteImg = `<img src='https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0' class='chat-emote' alt='${emoteText}' />`;
-            const stringBeforeEmote = originalMessage.substring(messageOffset, thisEmote.startPosition);
-
-            console.log(`emoteText: ${emoteText}`)
-            console.log(`emoteImg: ${emoteImg}`)
-            console.log(`stringBeforeEmote: ${stringBeforeEmote}`)
-
-            thisMessage += stringBeforeEmote + emoteImg
-            console.log(`message in construction: ${thisMessage}`)
-            messageOffset = thisEmote.endPosition
-            console.log(`messageOffset: ${messageOffset}`)
-          })
-          message.parameters += thisMessage;
-          // console.log(message.parameters);
+        for (const emote in message.tags.emotes) { // for each different emote
+          // get the first instance of this emote's start and end position, extract the text used to call the emote,
+          // and replace every instance of that string with the url
+          const emoteText = originalMessage.substring(message.tags.emotes[emote][0].startPosition, parseInt(message.tags.emotes[emote][0].endPosition)+1);
+          const emoteImg = `<img src='https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0' class='chat-emote' alt='${emoteText}' />`;
+          
+          newMessage = newMessage.replaceAll(emoteText, emoteImg);
         }
-        // emotes are done, append the rest of the string after the last emote string
-        message.parameters += originalMessage.substring(messageOffset, originalMessage.length)
-        console.log(`final message: ${message.parameters}`)
+
+        // replace message content with new message in message object
+        message.parameters = newMessage;
       }
+
+      // limit messages that can be displayed at once, remove the first message in the array of messages if at the limit
       if (this.messagesToDisplay.length == this.messageLimit) this.messagesToDisplay.shift();
       this.messagesToDisplay.push(message);
-      // console.log(message);
     }
   },
   destroyed: function() {

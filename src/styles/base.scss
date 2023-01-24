@@ -64,3 +64,11 @@ h1 {
 .no_audio-badge {
   background-image: url(../assets/chatbadges/no_audio.png);
 }
+
+.chat-content img {
+  position: relative;
+  top: 5px;
+}
+p:has(> .chat-content > img) {
+  margin-top: -3px;
+}
