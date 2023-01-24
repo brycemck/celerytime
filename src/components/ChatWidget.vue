@@ -114,21 +114,39 @@ export default {
       }
       if (message.tags.emotes) {
         console.log(message.tags.emotes)
-        let thisMessage = message.parameters;
+        // save original message
+        let originalMessage = message.parameters;
+        // reset message string in message object so we can add on what we need
+        message.parameters = '';
+        let thisMessage = '';
+        let messageOffset = 0;
+
         for (const emote in message.tags.emotes) {
-          message.tags.emotes[emote].forEach(thisEmote => {
-            console.log(thisEmote)
-            // console.log(`BEFORE: ${thisMessage}`)
-            let toReplace = thisMessage.substring(thisEmote.startPosition, thisEmote.endPosition+1);
-            let emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0`;
-            console.log(`replace: '${toReplace}' (${thisEmote.startPosition}, ${thisEmote.endPosition+1}) with ${emoteUrl}`)
-            // console.log(`but this works? ${message.parameters.substring(0, 3)}`)
-            thisMessage = message.parameters.replace(toReplace, emoteUrl);
-            // console.log(`AFTER: ${thisMessage}`)
+          thisMessage = ''
+          message.tags.emotes[emote].forEach(thisEmote => { // for each instance of one emote
+            // convert to ints so we can + 1 later
+            thisEmote.startPosition = parseInt(thisEmote.startPosition);
+            thisEmote.endPosition = parseInt(thisEmote.endPosition) + 1;
+
+            const emoteText = originalMessage.substring(thisEmote.startPosition, thisEmote.endPosition);
+            const emoteImg = `<img src='https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0' class='chat-emote' alt='${emoteText}' />`;
+            const stringBeforeEmote = originalMessage.substring(messageOffset, thisEmote.startPosition);
+
+            console.log(`emoteText: ${emoteText}`)
+            console.log(`emoteImg: ${emoteImg}`)
+            console.log(`stringBeforeEmote: ${stringBeforeEmote}`)
+
+            thisMessage += stringBeforeEmote + emoteImg
+            console.log(`message in construction: ${thisMessage}`)
+            messageOffset = thisEmote.endPosition
+            console.log(`messageOffset: ${messageOffset}`)
           })
-          // message.parameters = thisMessage;
-          // console.log(`END LOOP: ${message.parameters}`)
+          message.parameters += thisMessage;
+          // console.log(message.parameters);
         }
+        // emotes are done, append the rest of the string after the last emote string
+        message.parameters += originalMessage.substring(messageOffset, originalMessage.length)
+        console.log(`final message: ${message.parameters}`)
       }
       if (this.messagesToDisplay.length == this.messageLimit) this.messagesToDisplay.shift();
       this.messagesToDisplay.push(message);
