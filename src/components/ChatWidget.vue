@@ -71,10 +71,71 @@ export default {
   data() {
     return {
       messageLimit: 15,
-      messagesToDisplay: []
+      messagesToDisplay: [],
+      bttvEmotes: null,
+      sevenTvEmotes: [],
+      sevenTvEmoteSets: null
     }
   },
+  created: function() {
+    // BTTV fetch
+    this.getBTTVEmotes(import.meta.env.VITE_BTTV_PROVIDER_ID);
+    // 7TV fetch
+    this.getSevenTvEmoteSets(import.meta.env.VITE_7TV_USER_ID);
+  },
   methods: {
+    getBTTVEmotes: function(providerId) {
+      this.bttvEmotes = fetch(`https://api.betterttv.net/3/cached/users/twitch/${providerId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          return data
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    getSevenTvEmoteSets: function(userId) {
+      const that = this;
+      this.sevenTvEmoteSets = fetch(`https://7tv.io/v3/users/${userId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          let emoteSets = []
+
+          data.emote_sets.forEach(emoteSet => {
+            emoteSets.push(emoteSet)
+          })
+
+          that.sevenTvEmoteSets = emoteSets;
+          that.getSevenTvEmotes();
+          return data
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    getSevenTvEmotes: function() {
+      const that = this;
+      this.sevenTvEmoteSets.forEach(emoteSet => {
+        const emoteSetFetch = fetch(`https://7tv.io/v3/emote-sets/${emoteSet.id}`)
+          .then((response) => response.json())
+          .then((data) => {
+            return data
+          })
+          .catch((error) => {
+            console.error(error)
+          })
+        
+        emoteSetFetch.then((result) => {
+          let emotes = []
+          result.emotes.forEach(emote => {
+            emotes.push(emote);
+          })
+          // console.log(emotes)
+          that.sevenTvEmotes.push(emotes)
+          // console.log(result)
+        })
+      })
+    },
     newMessage: function(message) {
       // parse badges
       if (message.tags.badges) {
@@ -136,6 +197,39 @@ export default {
         // replace message content with new message in message object
         message.parameters = newMessage;
       }
+      
+      // BTTV checks
+      this.bttvEmotes.then((result) => {
+        const originalMessage = message.parameters;
+        let newMessage = originalMessage;
+        let emotesArray = [];
+
+        result.channelEmotes.forEach(emote => {
+          emotesArray.push(emote)
+        });
+        result.sharedEmotes.forEach(emote => {
+          emotesArray.push(emote)
+        });
+        emotesArray.forEach(emote => {
+          newMessage = newMessage.replaceAll(emote.code, `<img src='https://cdn.betterttv.net/emote/${emote.id}/1x' class='chat-emote' alt='${emote.code}' />`);
+        });
+
+        if (newMessage === originalMessage) return;
+        
+        console.log('contained BTTV emote!')
+        message.parameters = newMessage;
+        // console.log(emotesArray)
+      });
+
+      // 7TV checks
+      this.sevenTvEmotes[0].forEach(emote => {
+        const originalMessage = message.parameters;
+        let newMessage = originalMessage;
+
+        newMessage = newMessage.replaceAll(emote.data.name, `<img src='https:${emote.data.host.url}/1x' class='chat-emote' alt='${emote.data.name}' />`)
+        message.parameters = newMessage;
+      });
+
 
       // limit messages that can be displayed at once, remove the first message in the array of messages if at the limit
       if (this.messagesToDisplay.length == this.messageLimit) this.messagesToDisplay.shift();
