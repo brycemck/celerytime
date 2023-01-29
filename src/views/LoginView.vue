@@ -10,7 +10,7 @@
 const base_url = 'https://id.twitch.tv/oauth2/authorize'
 const client_id = import.meta.env.VITE_TWITCH_CLIENT_ID
 const redirect_uri = 'http://localhost:5173/login?response=true'
-const scope = 'chat%3Aread+chat%3Aedit'
+const scope = 'chat%3Aread+chat%3Aedit+channel%3Aread%3Asubscriptions+channel%3Aread%3Aredemptions+channel%3Aread%3Apolls+channel%3Aread%3Apredictions+channel%3Aread%3Agoals+moderator%3Aread%3Ashoutouts'
 
 export default {
   name: 'Login',
