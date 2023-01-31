@@ -9,6 +9,7 @@ export default {
   name: 'StreamAlerts',
   data() {
     return {
+      alertQueue: [],
       channelEvents: [
         {
           'type': 'channel.follow',
@@ -196,6 +197,8 @@ export default {
     },
     handleEventsubReconnection: function(messageData) {
       console.log(`must reconnect using ${messageData}`)
+      this.eventConnection.close();
+      this.eventConnection = new WebSocket(messageData.payload.session.reconnect_url)
     }
   },
   created: function() {
