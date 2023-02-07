@@ -487,11 +487,11 @@ export default {
         });
       }
 
-
       // limit messages that can be displayed at once, remove the first message in the array of messages if at the limit
       if (this.messagesToDisplay.length == this.messageLimit) this.messagesToDisplay.shift();
       this.messagesToDisplay.push(message);
     }
+    },
   },
   created: function() {
     const that = this;
