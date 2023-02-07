@@ -17,3 +17,7 @@ VITE_BTTV_PROVIDER_ID=''
 # your 7tv user ID (if you want to support 7TV emotes)
 VITE_7TV_USER_ID=''
 ```
+
+Also make sure to run `npm install` to get all necessary dependencies.
+
+`npm run dev` runs the server.
