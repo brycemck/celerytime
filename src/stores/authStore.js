@@ -17,15 +17,16 @@ export const useAuthStore = defineStore('authStore', {
       this.uid = this.twitchUserData.data[0].id;
     },
     generateToken() {
-      const firebaseAuth = getAuth(firebaseApp);
+      return '😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹😹';
+      // const firebaseAuth = getAuth(firebaseApp);
 
-      firebaseAuth.createCustomToken(this.uid)
-        .then((customToken) => {
-          return customToken
-        })
-        .catch((error) => {
-          console.log('Error creating custom token:', error);
-        });
+      // firebaseAuth.createCustomToken(this.uid)
+      //   .then((customToken) => {
+      //     return customToken
+      //   })
+      //   .catch((error) => {
+      //     console.log('Error creating custom token:', error);
+      //   });
     },
     login() {
       console.log(this.generateToken());

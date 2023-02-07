@@ -443,8 +443,8 @@ export default {
         for (const emote in message.tags.emotes) { // for each different emote
           // get the first instance of this emote's start and end position, extract the text used to call the emote,
           // and replace every instance of that string with the url
-          const emoteText = originalMessage.substring(message.tags.emotes[emote][0].startPosition, parseInt(message.tags.emotes[emote][0].endPosition)+1);
-          const emoteImg = `<img src='https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0' class='chat-emote' alt='${emoteText}' />`;
+          const emoteText = originalMessage.substring(message.tags.emotes[emote][0].startPosition, parseInt(message.tags.emotes[emote][0].endPosition)+1) + ' ';
+          const emoteImg = `<img src='https://static-cdn.jtvnw.net/emoticons/v2/${emote}/default/light/1.0' class='chat-emote' alt='${emoteText}' /> `;
           
           newMessage = newMessage.replaceAll(emoteText, emoteImg);
         }
@@ -470,13 +470,11 @@ export default {
             newMessage = newMessage.replaceAll(emote.code, `<img src='https://cdn.betterttv.net/emote/${emote.id}/1x' class='chat-emote' alt='${emote.code}' />`);
           });
 
-          if (newMessage === originalMessage) return;
-          
-          console.log('contained BTTV emote!')
-          message.parameters = newMessage;
-          // console.log(emotesArray)
-        });
-      }
+        if (newMessage === originalMessage) return;
+        
+        console.log('contained BTTV emote!')
+        message.parameters = newMessage;
+      });
 
       // 7TV checks
       if (import.meta.env.VITE_7TV_PROVIDER_ID) {

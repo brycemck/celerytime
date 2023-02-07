@@ -45,7 +45,7 @@ export default {
       
       userFetch.then(data => {
         this.authStore.updateTwitchInfo(data);
-        this.authStore.login();
+        // this.authStore.login();
       })
     }
   },
