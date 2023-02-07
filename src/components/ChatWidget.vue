@@ -454,36 +454,40 @@ export default {
       }
       
       // BTTV checks
-      this.bttvEmotes.then((result) => {
-        const originalMessage = message.parameters;
-        let newMessage = originalMessage;
-        let emotesArray = [];
+      if (import.meta.env.VITE_BTTV_PROVIDER_ID) {
+        this.bttvEmotes.then((result) => {
+          const originalMessage = message.parameters;
+          let newMessage = originalMessage;
+          let emotesArray = [];
 
-        result.channelEmotes.forEach(emote => {
-          emotesArray.push(emote)
-        });
-        result.sharedEmotes.forEach(emote => {
-          emotesArray.push(emote)
-        });
-        emotesArray.forEach(emote => {
-          newMessage = newMessage.replaceAll(emote.code, `<img src='https://cdn.betterttv.net/emote/${emote.id}/1x' class='chat-emote' alt='${emote.code}' />`);
-        });
+          result.channelEmotes.forEach(emote => {
+            emotesArray.push(emote)
+          });
+          result.sharedEmotes.forEach(emote => {
+            emotesArray.push(emote)
+          });
+          emotesArray.forEach(emote => {
+            newMessage = newMessage.replaceAll(emote.code, `<img src='https://cdn.betterttv.net/emote/${emote.id}/1x' class='chat-emote' alt='${emote.code}' />`);
+          });
 
-        if (newMessage === originalMessage) return;
-        
-        console.log('contained BTTV emote!')
-        message.parameters = newMessage;
-        // console.log(emotesArray)
-      });
+          if (newMessage === originalMessage) return;
+          
+          console.log('contained BTTV emote!')
+          message.parameters = newMessage;
+          // console.log(emotesArray)
+        });
+      }
 
       // 7TV checks
-      this.sevenTvEmotes[0].forEach(emote => {
-        const originalMessage = message.parameters;
-        let newMessage = originalMessage;
+      if (import.meta.env.VITE_7TV_PROVIDER_ID) {
+        this.sevenTvEmotes[0].forEach(emote => {
+          const originalMessage = message.parameters;
+          let newMessage = originalMessage;
 
-        newMessage = newMessage.replaceAll(emote.data.name, `<img src='https:${emote.data.host.url}/1x' class='chat-emote' alt='${emote.data.name}' />`)
-        message.parameters = newMessage;
-      });
+          newMessage = newMessage.replaceAll(emote.data.name, `<img src='https:${emote.data.host.url}/1x' class='chat-emote' alt='${emote.data.name}' />`)
+          message.parameters = newMessage;
+        });
+      }
 
 
       // limit messages that can be displayed at once, remove the first message in the array of messages if at the limit
@@ -498,9 +502,10 @@ export default {
     this.accessToken = this.$cookies.get('access_token')
 
     // BTTV fetch
-    this.getBTTVEmotes(import.meta.env.VITE_BTTV_PROVIDER_ID);
+    if (import.meta.env.VITE_BTTV_PROVIDER_ID) this.getBTTVEmotes(import.meta.env.VITE_BTTV_PROVIDER_ID);
+    
     // 7TV fetch
-    this.getSevenTvEmoteSets(import.meta.env.VITE_7TV_USER_ID);
+    if (import.meta.env.VITE_7TV_USER_ID) this.getSevenTvEmoteSets(import.meta.env.VITE_7TV_USER_ID);
 
     this.chatConnection = new WebSocket('ws://irc-ws.chat.twitch.tv:80')
     this.chatConnection.onopen = function(event) {
