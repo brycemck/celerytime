@@ -50,15 +50,15 @@ export default {
     }
   },
   created: function() {
-    // if (this.$cookies.get('access_token')) {
-    //   this.$router.push('/')
-    // }
+    if (this.$cookies.get('access_token')) {
+      this.$router.push('/')
+    }
     if (this.$route.query.response) { // login callback
       let hash = new URLSearchParams(document.location.hash.slice(1));
       this.getTwitchUserInfo(hash.get('access_token'));
 
-      // this.$cookies.set('access_token', hash.get('access_token'))
-      // this.$router.push('/')
+      this.$cookies.set('access_token', hash.get('access_token'))
+      this.$router.push('/')
     }
   }
 }
